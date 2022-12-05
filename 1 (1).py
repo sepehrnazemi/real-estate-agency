@@ -26,7 +26,7 @@ if "admins.csv" in os.listdir():
 else:
     admins_file = {"name" : [], "last_name" : [],
                   "username" : [], "password" : []}
-    admins_file = pd.DataFrame(users_file)
+    admins_file = pd.DataFrame(admins_file)
     admins_file.to_csv("admins.csv", index=False)
     admins_file = pd.read_csv("admins.csv")
 
@@ -39,7 +39,24 @@ while True:
         while True:
             print("Choose your role:\n1- User\n2- Admin")
             order = input()
-
+            if order == "1":
+                print("Write your information(name, last name, username, password):")
+                order = input().split()
+                users_names = users_file['name'].values.tolist()
+                users_last name = users_file['last name'].values.tolist()
+                users_username = users_file['username'].values.tolist()
+                users_password = users_file['password'].values.tolist()
+                if (order[0] in users_names) and (order[1] in users_last name) and (order[2] in users_username) and (order[3] in users_password) :
+                    print("hello "+ order[0])
+            elif order == "2":  
+                print("Write your information(name, last name, username, password):")
+                order = input().split()
+                admins_names = admins_file['name'].values.tolist()
+                admins_last name = admins_file['last name'].values.tolist()
+                admins_username = admins_file['username'].values.tolist()
+                admins_password = admins_file['password'].values.tolist()
+                if (order[0] in admins_names) and (order[1] in admins_last name) and (order[2] in admins_username) and (order[3] in admins_password) :
+                    print("hello "+ order[0])
 
     if order == "2":
         while True:
