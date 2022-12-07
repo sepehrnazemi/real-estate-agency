@@ -78,7 +78,7 @@ while end != True:
                     if order == "exit":
                         break
                     elif order == "exitexit":
-                        end == True
+                        end = True
                     order = order.split()
                     users_names = users_file['name'].values.tolist()
                     if order[2] in users_names:
@@ -101,7 +101,7 @@ while end != True:
                         if order == "exit":
                             break
                         elif order == "exitexit":
-                            end == True
+                            end = True
                         order = order.split()
                         admins_names = admins_file['name'].values.tolist()
                         if order[2] in admins_names:
