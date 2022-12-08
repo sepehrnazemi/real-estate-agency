@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import datetime
 
 class User:
     def __init__(self, name, last_name, username, password):
@@ -11,45 +12,51 @@ class User:
 class Admin(User):
     def __init__(self, name, last_name, username, password):
         super().__init__(name, last_name, username, password)
+    
+def check_file(n: str):
+    if "users.csv" in os.listdir():
+        file = pd.read_csv(n)
+        tags = file.to_dict()
+        if list(tags.keys()) != ['name', 'last_name', 'username', 'password']:
+            os.remove(n)
+            file = {"name" : [], "last_name" : [],
+                      "username" : [], "password" : []}
+        file = pd.DataFrame(file)
+        file.to_csv(n, index=False)
+    else:
+        file = {"name" : [], "last_name" : [],
+                      "username" : [], "password" : []}
+        file = pd.DataFrame(file)
+        file.to_csv(n, index=False)
 
-if "users.csv" in os.listdir():
-    users_file = pd.read_csv("users.csv")
-    tags = users_file.to_dict()
-    if list(tags.keys()) != ['name', 'last_name', 'username', 'password']:
-        os.remove("users.csv")
-        users_file = {"name" : [], "last_name" : [],
-                  "username" : [], "password" : []}
-        users_file = pd.DataFrame(users_file)
-        users_file.to_csv("users.csv", index=False)
-        users_file = pd.read_csv("users.csv")
-else:
-    users_file = {"name" : [], "last_name" : [],
-                  "username" : [], "password" : []}
-    users_file = pd.DataFrame(users_file)
-    users_file.to_csv("users.csv", index=False)
-    users_file = pd.read_csv("users.csv")
+def user_menu():
+    pass
+def sign_in(n: str, username):
+    password = input("Enter your password:\n")
+    file = pd.read_csv(n)
+    file_list = file.values.tolist()
+    counter = 0
+    for i in file_list:
+        if username == i[2] and password == i[3]:
+            global person
+            person = i
+            counter += 1
+    if counter == 0:
+        return False
+    else:
+        return True
 
-if "admins.csv" in os.listdir():
-    admins_file = pd.read_csv("admins.csv")
-    tags = admins_file.to_dict()
-    if list(tags.keys()) != ['name', 'last_name', 'username', 'password']:
-        os.remove("admins.csv")
-        admins_file = {"name" : [], "last_name" : [],
-                  "username" : [], "password" : []}
-        admins_file = pd.DataFrame(users_file)
-        admins_file.to_csv("admins.csv", index=False)
-        admins_file = pd.read_csv("admins.csv")
-else:
-    admins_file = {"name" : [], "last_name" : [],
-                  "username" : [], "password" : []}
-    admins_file = pd.DataFrame(users_file)
-    admins_file.to_csv("admins.csv", index=False)
-    admins_file = pd.read_csv("admins.csv")
+
+
+check_file("users.csv")
+check_file("admins.csv")
     
 important_password = "0000"
 
 end = False
-while end != True:
+while True:
+    if end == True:
+        end = False
     print("Choose an operation:\n1- Sing in\n2- Sing up\nexit- return\nexitexit- end")
     order = input()
     if order == "1":
@@ -57,13 +64,39 @@ while end != True:
             print("Choose your role:\n1- User\n2- Admin")
             order = input()
             if order == "1":
-                pass
-            if order == "2":
-                pass
+                while end != True:
+                    username = input("Enter your username:\n")
+                    if username == "exit":
+                        break
+                    elif username == "exitexit":
+                        exit()
+                    if sign_in("users.csv", username) == True:
+                        user = User(person[0], person[1], person[2], person[3])
+                        while end != True:
+                            print("TUSHHHHHHHHH")
+                    else:
+                        print("Incorect password or username")
+                
+           
+            elif order == "2":
+                while end != True:
+                    username = input("Enter your username:\n")
+                    if username == "exit":
+                        break
+                    elif username == "exitexit":
+                        exit()
+                    password = input("Enter your password:\n")
+                    admins_file = pd.read_csv("admins.csv")
+                    admins_list = admins_file.values.tolist()
+                    for i in admins_list:
+                        if username == i[2] and password == i[3]:
+                            admin = Admin(i[0], i[1], i[2], i[3])
+                            while end != True:
+                                pass
             elif order == "exit":
                 break
             elif order == "exitexit":
-                end = True
+                exit()
 
 
     
@@ -78,15 +111,16 @@ while end != True:
                     if order == "exit":
                         break
                     elif order == "exitexit":
-                        end = True
+                        exit()
                     order = order.split()
+                    users_file = pd.read_csv("users.csv")
                     users_names = users_file['name'].values.tolist()
                     if order[2] in users_names:
                         print("Repeated username!")
                     else:
                         user = User(order[0], order[1], order[2], order[3])
-                        new_user = {"name" : [user.name], "last_name" : [user.last_name],
-                            "username" : [user.username], "password" : [user.password]}
+                        new_user = {"name" : [str(user.name)], "last_name" : [str(user.last_name)],
+                            "username" : [str(user.username)], "password" : [str(user.password)]}
                         new_user = pd.DataFrame(new_user)
                         new_user.to_csv("users.csv", mode='a', index=False, header=False)
                         print("Welcome!")
@@ -101,7 +135,7 @@ while end != True:
                         if order == "exit":
                             break
                         elif order == "exitexit":
-                            end = True
+                            exit()
                         order = order.split()
                         admins_names = admins_file['name'].values.tolist()
                         if order[2] in admins_names:
@@ -117,14 +151,13 @@ while end != True:
                     elif order == "exit":
                         break
                     elif order == "exitexit":
-                        end = True
+                        exit()
             elif order == "exit":
                 break
             elif order == "exitexit":
-                end = True
+                exit()
 
     elif order == "exit":
         break
     elif order == "exitexit":
-        end = True
-
+        exit()
