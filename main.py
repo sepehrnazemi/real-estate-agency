@@ -54,7 +54,7 @@ def pre_singup():
         elif order == "exitexit":
             exit()
             
-def singup(n):
+def singup(n): #again
     while end != True:
         name = input()
         if name == "exit":
