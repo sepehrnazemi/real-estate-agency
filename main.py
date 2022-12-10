@@ -29,7 +29,7 @@ def first():
     while True:
         if end == True:
             end = False
-        order = input()
+        order = input("Choose an operation:\n1- Sing in\n2- Sing up\nexit- return\nexitexit- end\n")
         if order == "1":
             pre_singin()
         elif order == "2":
@@ -44,11 +44,11 @@ def pre_singin():
 
 def pre_singup():
     while end != True:
-        order = input()
+        order = input("Choose your role:\n1- User\n2- Admin\n")
         if order == "1":
-            singup("users")
+            singup("USERS")
         elif order == "2":
-            singup("admins")
+            singup("ADMINS")
         elif order == "exit":
             break
         elif order == "exitexit":
@@ -57,11 +57,36 @@ def pre_singup():
 def singup(n):
     while end != True:
         name = input()
+        if name == "exit":
+            break
+        elif name == "exitexit":
+            exit()
         username = input()
-        db_order = "SELECT * FROM {table_name} WHERE username = {table_username}".format(table_name = n, table_username = username)
+        db_order = "SELECT * FROM %r WHERE username = %r" %(n, username)
         cursor.execute(db_order)
         if cursor.fetchall() != []:
             print("Repeated username!")
             continue
         password = input()
-        
+        db_order =" INSERT INTO %r VALUES (%r, %r, %r)" %(n, name, username, password)
+        cursor.execute(db_order)
+        if n == "USERS":
+            global user
+            user = User(name, username, password)
+            user_menu()
+        else:
+            order = input("Admins password:\n")
+            if order != important_password:
+                print("Incorrect password!")
+                continue
+            global admin
+            user = User(name, username, password)
+            admin_menu()
+
+def user_menu():
+    print("gggg")
+
+def admin_menu():
+    pass
+
+first()
