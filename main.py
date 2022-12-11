@@ -1,12 +1,37 @@
 import sqlite3
 import datetime
 from dateutil.relativedelta import relativedelta
+#import decimal
 
 class User:
     def __init__(self, name, username, password):
         self.name = name
         self.username = username
         self.password = password
+    
+    def rename(self, type):
+        while True:
+            order = input("Enter your new name:\n")
+            if order == "exit":
+                break
+            elif order == "exitexit":
+                exit()
+            self.name = order
+            cursor.execute("UPDATE %r SET name = %r WHERE username = %r" %(type, order, self.username))
+            db.commit()
+            break
+
+    def newpassword(self, type):
+        while True:
+            order = input("Enter your new password:\n")
+            if order == "exit":
+                break
+            elif order == "exitexit":
+                exit()
+            self.password = order
+            cursor.execute("UPDATE %r SET password = %r WHERE username = %r" %(type, order, self.username))
+            db.commit()
+            break
 
 class Admin(User):
     def __init__(self, name, username, password):
@@ -159,7 +184,8 @@ def singup(n):
             admin_menu()
 
 def user_menu():
-    pass
+    while end != True:
+        order = input('''Choose operation:\n1- ''')#todo
 
 def admin_menu():
     pass
