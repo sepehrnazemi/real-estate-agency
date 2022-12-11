@@ -2,7 +2,8 @@ import sqlite3
 import datetime
 from dateutil.relativedelta import relativedelta
 #import decimal
-
+'''اگه ویزگی دیگه ای برای کلاس های خونه ها سرا؛ داری اضافه کن!!!!!!
+'''
 class User:
     def __init__(self, name, username, password):
         self.name = name
