@@ -2,13 +2,18 @@ import sqlite3
 import datetime
 from dateutil.relativedelta import relativedelta
 #import decimal
-'''اگه ویزگی دیگه ای برای کلاس های خونه ها سرا؛ داری اضافه کن!!!!!!
-'''
+
 class User:
     def __init__(self, name, username, password):
         self.name = name
         self.username = username
         self.password = password
+        cursor.execute("SELECT * FROM USERS WHERE username = %r" %(self.username))
+        movaghat = cursor.fetchall()
+        if movaghat == []:
+            self.credit = 0
+        else:
+            self.credit = movaghat[0][3]
     
     def rename(self, type):
         while True:
@@ -34,9 +39,20 @@ class User:
             db.commit()
             break
 
-class Admin(User):
-    def __init__(self, name, username, password):
-        super().__init__(name, username, password)
+    def update_credit(self, type):
+        while True:
+            order = input("Enter your number:\n")
+            if order == "exit":
+                break
+            elif order == "exitexit":
+                exit()
+            elif order.isdecimal() == False:
+                print("You didn't enter the number!")
+                continue
+            self.credit += int(order)
+            cursor.execute("UPDATE %r SET cedit = %r WHERE username = %r" %(type, self.credit, self.username))
+            db.commit()
+            break
 
 class Home:
     def __init__(self, address, const_year, rooms, parking, furnished, status):
@@ -69,19 +85,43 @@ class RentingHome(Home):
             self.end_date = "unknown"
         self.owner = owner
         self.renter = renter
-        #check dates again!!!!!
 
 db = sqlite3.connect('sql.db')
 cursor = db.cursor()
 cursor.execute('''
           CREATE TABLE IF NOT EXISTS users
-          ([name] TEXT, [username] TEXT, [password] TEXT)
+          ([name] TEXT, [username] TEXT, [password] TEXT, [credit] INTEGER)
           ''')
           
 cursor.execute('''
           CREATE TABLE IF NOT EXISTS admins
-          ([name] TEXT, [username] TEXT, [password] TEXT)
+          ([name] TEXT, [username] TEXT, [password] TEXT, [credit] INTEGER)
           ''')
+
+cursor.execute('''
+          CREATE TABLE IF NOT EXISTS buying_homes
+          ([id] INTEGER PRIMARY KEY, [price] INTEGER, [address] TEXT, [construct_year] TEXT,
+           [roooms_number] INTEGER, [parkings_number] INTEGER,
+           [furnished] TEXT, [seler_username] TEXT, [buyer_username] TEXT, [status] TEXT)
+          ''')
+
+cursor.execute('''
+          CREATE TABLE IF NOT EXISTS buying_homes
+          ([id] INTEGER PRIMARY KEY, [security_deposit] INTEGER, [monthly_rent] INTEGER, [address] TEXT, [construct_year] TEXT,
+           [roooms_number] INTEGER, [parkings_number] INTEGER, [furnished] TEXT, [period] INTEGER,
+           [start_date] TEXT, [end_date] TEXT, [owner_username] TEXT, [renter_username] TEXT, [status] TEXT)
+          ''')
+
+cursor.execute('''
+          CREATE TABLE IF NOT EXISTS real_estate
+          ([id] INTEGER PRIMARY KEY, [password] TEXT, [credit] INTEGER)
+          ''')
+
+cursor.execute('''
+          CREATE TABLE IF NOT EXISTS transactions
+          ([id] INTEGER PRIMARY KEY, [credit] INTEGER, [reason] TEXT, [functor] TEXT)
+          ''')
+
 db.commit()
 
 important_password = "0000"
@@ -127,13 +167,11 @@ def singin(n):
             print("Incorrect username or password!")
             continue
         cursor.execute("SELECT name FROM %r WHERE USERNAME = %r" %(n, username))
+        global user
+        user = User(cursor.fetchall()[0][0], username, password)
         if n == "USERS":
-            global user
-            user = User(cursor.fetchall()[0][0], username, password)
             user_menu()
         else:
-            global admin
-            admin = Admin(cursor.fetchall()[0][0], username, password)
             admin_menu()
         
 def pre_singup():
@@ -175,13 +213,11 @@ def singup(n):
         password = input("Enter your password:\n")
         cursor.execute(" INSERT INTO %r VALUES (%r, %r, %r)" %(n, name, username, password))
         db.commit()
+        global user
+        user = User(name, username, password)
         if n == "USERS":
-            global user
-            user = User(name, username, password)
             user_menu()
         else:
-            global admin
-            admin = Admin(name, username, password)
             admin_menu()
 
 def user_menu():
