@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 from dateutil.relativedelta import relativedelta
+import pandas as pd
 #import decimal
 
 class User:
@@ -109,7 +110,7 @@ cursor.execute('''
           CREATE TABLE IF NOT EXISTS renting_homes
           ([id] INTEGER PRIMARY KEY, [security_deposit] INTEGER, [monthly_rent] INTEGER, [address] TEXT, [construct_year] TEXT,
            [roooms_number] INTEGER, [parkings_number] INTEGER, [furnished] TEXT, [period] INTEGER,
-           [start_date] TEXT, [end_date] TEXT, [owner_username] TEXT, [renter_username] TEXT, [status] TEXT)
+           [start_date] TEXT, [end_date] TEXT, [owner_username] TEXT, [renter_username] TEXT,[payed_monthes] INTEGER ,[status] TEXT)
           ''')
 
 cursor.execute('''
@@ -156,12 +157,12 @@ def pre_singin():
 
 def singin(n):
     while end != True:
-        username = input()
+        username = input("Enter your usename:\n")
         if username == "exit":
             break
         elif username == "exitexit":
             exit()
-        password = input()
+        password = input("Enter your password:\n")
         cursor.execute("SELECT password FROM %r WHERE USERNAME = %r" %(n, username))
         if cursor.fetchall()[0][0] != password:
             print("Incorrect username or password!")
@@ -211,7 +212,7 @@ def singup(n):
             del movaghat
             continue
         password = input("Enter your password:\n")
-        cursor.execute(" INSERT INTO %r VALUES (%r, %r, %r)" %(n, name, username, password))
+        cursor.execute(" INSERT INTO %r VALUES (%r, %r, %r, 0)" %(n, name, username, password))
         db.commit()
         global user
         user = User(name, username, password)
@@ -225,8 +226,44 @@ def user_menu():
         order = input('''Choose operation:\n1-buying home\n2-renting homes
         3-deletacount\n4-rename\n5-myhomes\n6-buying user
         7-update data\n8-change password\n9-rent homes\ncheck creadit''')
-        
-def admin_menu():
-    pass
+        if order == "exit":
+            break
+        elif order == "exitexit":
+            exit()
+        elif order == "1":
+            home_menu()
 
+def admin_menu():
+    pass#todo
+
+def home_menu():
+    while True:
+        order = input("Choose operation:\n1- Add \n2- Choose\n3- Show:")
+        if order == "exit":
+            break
+        elif order == "exitexit":
+            exit()
+        elif order == "3":
+            show_home("buying_homes")
+
+li = ["id", "price" ,"address", "construct_year", "roooms_number", "parkings_number", "furnished", "seler_username", "buyer_username", "status"]
+
+def show_home(n):
+    while True:
+        if n == "buying_homes":
+            order = input("Enter sort mudel:id/price/construct_year/roooms_number/parkings_number/furnished")
+            if order == "exit":
+                break
+            elif order == "exitexit":
+                exit()
+            sort_type = input("Choose sort type:\n1- descending\n2- ascending")
+            if sort_type == "1":
+                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %r DESC" %(order))
+                df = pd.DataFrame(cursor.fetchall(), columns=li)
+                print(df)
+            else:
+                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %r ASC" %(order))
+                df = pd.DataFrame(cursor.fetchall(), columns=li)
+                print(df)
+            
 first()
