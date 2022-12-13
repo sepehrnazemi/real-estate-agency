@@ -106,7 +106,7 @@ cursor.execute('''
           ''')
 
 cursor.execute('''
-          CREATE TABLE IF NOT EXISTS buying_homes
+          CREATE TABLE IF NOT EXISTS renting_homes
           ([id] INTEGER PRIMARY KEY, [security_deposit] INTEGER, [monthly_rent] INTEGER, [address] TEXT, [construct_year] TEXT,
            [roooms_number] INTEGER, [parkings_number] INTEGER, [furnished] TEXT, [period] INTEGER,
            [start_date] TEXT, [end_date] TEXT, [owner_username] TEXT, [renter_username] TEXT, [status] TEXT)
@@ -222,8 +222,10 @@ def singup(n):
 
 def user_menu():
     while end != True:
-        order = input('''Choose operation:\n1- ''')#todo
-
+        order = input('''Choose operation:\n1-buying home\n2-renting homes
+        3-deletacount\n4-rename\n5-myhomes\n6-buying user
+        7-update data\n8-change password\n9-rent homes\ncheck creadit''')
+        
 def admin_menu():
     pass
 
