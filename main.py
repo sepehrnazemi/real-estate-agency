@@ -125,7 +125,21 @@ cursor.execute('''
 
 db.commit()
 
-important_password = "0000"
+cursor.execute("SELECT * FROM real_estate WHERE id = 1")
+movaghat = cursor.fetchall()
+if movaghat == []:
+    cursor.execute(" INSERT INTO real_estate(password, credit) VALUES ('0000', 0)")
+    db.commit()
+    important_password = "0000"
+else:
+    important_password = movaghat[0][1]
+    
+b_homes_columns = ["id", "price" , "address", "construct_year", "roooms_number",
+                   "parkings_number", "furnished", "seler_username", "buyer_username", "status"]
+r_homes_columns = ["id", "security_deposit","monthly_rent" , "address", "construct_year", "roooms_number",
+                   "parkings_number", "furnished", "period", "start_date", "end_date",
+                    "owner_username", "renter_username", "payed_monthes", "status"]
+user = User(0, "0", 0)
 
 def first():
     global end
@@ -223,47 +237,115 @@ def singup(n):
 
 def user_menu():
     while end != True:
-        order = input('''Choose operation:\n1-buying home\n2-renting homes
-        3-deletacount\n4-rename\n5-myhomes\n6-buying user
-        7-update data\n8-change password\n9-rent homes\ncheck creadit''')
+        order = input('''Choose operation:\n1- Buying home\n2- Renting home
+3- Check credit\n4- Update credit\n5- My homes\n6- Rename\n7- Change password
+8- Find user\n3- Delete account\n''')
         if order == "exit":
             break
         elif order == "exitexit":
             exit()
         elif order == "1":
-            home_menu()
+            home_menu("buying_homes")
 
 def admin_menu():
     pass#todo
 
-def home_menu():
+def home_menu(n):
     while True:
-        order = input("Choose operation:\n1- Add \n2- Choose\n3- Show:")
+        order = input("Choose operation:\n1- Add \n2- Choose\n3- Show\n")
         if order == "exit":
             break
         elif order == "exitexit":
             exit()
+        elif order == "1":
+            add_home(n)
+        elif order == "2":
+            choose_home(n)
         elif order == "3":
-            show_home("buying_homes")
+            show_home(n)
+            
+def add_home(n):
+    while True:
+        if n == "buying_homes":
+            address = input("Enter the address:\n")
+            if address == "exit":
+                break
+            elif address == "exitexit":
+                exit()
+            if unique_home(address) == False:
+                print("Repeated home!")
+                continue
+            price = int(input("Enter price:\n"))
+            construct_year = int(input("Enter construct year:\n"))
+            roooms_number = int(input("Enter roooms number:\n"))
+            parkings_number = int(input("Enter parkings number:\n"))
+            furnished = input("Is it furnished?(yes/no)\n")
+            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r)" %(price, address, construct_year, roooms_number, parkings_number, furnished, user.username, "unknown", "active"))
+            db.commit()
+        else:
+            address = input("Enter the address:\n")
+            if address == "exit":
+                break
+            elif address == "exitexit":
+                exit()
+            if unique_home(address) == False:
+                print("Repeated home!")
+                continue
+            security_deposit = int(input("Enter the security deposit:\n"))
+            monthly_rent = int(input("Enter the monthly rent:\n"))
+            construct_year = int(input("Enter construct year:\n"))
+            roooms_number = int(input("Enter roooms number:\n"))
+            parkings_number = int(input("Enter parkings number:\n"))
+            furnished = input("Is it furnished?(yes/no)\n")
+            period = int(input("Enter the period months:\n"))
+            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(security_deposit, monthly_rent, address, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, "active"))
+            db.commit()
+            
+def unique_home(n):
+    cursor.execute("SELECT * FROM buying_homes WHERE address = %r" %(n))
+    movaghat = cursor.fetchall()
+    cursor.execute("SELECT * FROM renting_homes WHERE address = %r" %(n))
+    if cursor.fetchall() != [] or movaghat != []:
+        return False
+    else: return True 
 
-li = ["id", "price" ,"address", "construct_year", "roooms_number", "parkings_number", "furnished", "seler_username", "buyer_username", "status"]
+def choose_home(n):
+    pass
 
 def show_home(n):
     while True:
         if n == "buying_homes":
-            order = input("Enter sort mudel:id/price/construct_year/roooms_number/parkings_number/furnished")
+            order = input("Enter sort mudel:id/price/address/construct_year/roooms_number/parkings_number/furnished\n")
             if order == "exit":
                 break
             elif order == "exitexit":
                 exit()
-            sort_type = input("Choose sort type:\n1- descending\n2- ascending")
+            sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
             if sort_type == "1":
-                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %r DESC" %(order))
-                df = pd.DataFrame(cursor.fetchall(), columns=li)
+                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %s DESC" %(order))
+                df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
+                df.set_index('id', inplace = True)
                 print(df)
             else:
-                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %r ASC" %(order))
-                df = pd.DataFrame(cursor.fetchall(), columns=li)
+                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %s ASC" %(order))
+                df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
+                df.set_index('id', inplace = True)
                 print(df)
-            
+        if n == "renting_homes":
+            order = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/construct_year/roooms_number/parkings_number/furnished\n")
+            if order == "exit":
+                break
+            elif order == "exitexit":
+                exit()
+            sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
+            if sort_type == "1":
+                cursor = db.execute("SELECT * FROM renting_homes ORDER BY %s DESC" %(order))
+                df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
+                df.set_index('id', inplace = True)
+                print(df)
+            else:
+                cursor = db.execute("SELECT * FROM renting_homes ORDER BY %s ASC" %(order))
+                df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
+                df.set_index('id', inplace = True)
+
 first()
