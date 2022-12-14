@@ -56,8 +56,9 @@ class User:
             break
 
 class Home:
-    def __init__(self, address, const_year, rooms, parking, furnished, status):
+    def __init__(self, area, address, const_year, rooms, parking, furnished, status):
         self.address = address
+        self.area = area
         self.const_year = const_year
         self.rooms = rooms
         self.parking = parking
@@ -65,15 +66,15 @@ class Home:
         self.furnished = furnished
 
 class BuyingHome(Home):
-    def __init__(self, price, address, const_year, rooms, parking, furnished, seller, buyer, status):
-        super().__init__(address, const_year, rooms, parking, furnished, status)
+    def __init__(self, price, address, area, const_year, rooms, parking, furnished, seller, buyer, status):
+        super().__init__(address, const_year, area, rooms, parking, furnished, status)
         self.price = price
         self.seller = seller
         self.buyer = buyer
 
 class RentingHome(Home):
-    def __init__(self, security_deposit, mo_rent, address, const_year, rooms, parking, furnished, period, start_date, owner, renter, status):
-        super().__init__(address, const_year, rooms, parking, furnished, status)
+    def __init__(self, security_deposit, mo_rent, address, area, const_year, rooms, parking, furnished, period, start_date, owner, renter, status):
+        super().__init__(address, const_year, area, rooms, parking, furnished, status)
         self.security_deposit = security_deposit
         self.mo_rent = mo_rent
         self.period = period
@@ -101,15 +102,15 @@ cursor.execute('''
 
 cursor.execute('''
           CREATE TABLE IF NOT EXISTS buying_homes
-          ([id] INTEGER PRIMARY KEY, [price] INTEGER, [address] TEXT, [construct_year] TEXT,
+          ([id] INTEGER PRIMARY KEY, [price] INTEGER, [address] TEXT, [area_size] REAL, [construct_year] TEXT,
            [roooms_number] INTEGER, [parkings_number] INTEGER,
            [furnished] TEXT, [seler_username] TEXT, [buyer_username] TEXT, [status] TEXT)
           ''')
 
 cursor.execute('''
           CREATE TABLE IF NOT EXISTS renting_homes
-          ([id] INTEGER PRIMARY KEY, [security_deposit] INTEGER, [monthly_rent] INTEGER, [address] TEXT, [construct_year] TEXT,
-           [roooms_number] INTEGER, [parkings_number] INTEGER, [furnished] TEXT, [period] INTEGER,
+          ([id] INTEGER PRIMARY KEY, [security_deposit] INTEGER, [monthly_rent] INTEGER, [address] TEXT, [area_size] REAL,
+           [construct_year] TEXT, [roooms_number] INTEGER, [parkings_number] INTEGER, [furnished] TEXT, [period] INTEGER,
            [start_date] TEXT, [end_date] TEXT, [owner_username] TEXT, [renter_username] TEXT,[payed_monthes] INTEGER ,[status] TEXT)
           ''')
 
@@ -134,9 +135,9 @@ if movaghat == []:
 else:
     important_password = movaghat[0][1]
     
-b_homes_columns = ["id", "price" , "address", "construct_year", "roooms_number",
+b_homes_columns = ["id", "price" , "address", "area_size", "construct_year", "roooms_number",
                    "parkings_number", "furnished", "seler_username", "buyer_username", "status"]
-r_homes_columns = ["id", "security_deposit","monthly_rent" , "address", "construct_year", "roooms_number",
+r_homes_columns = ["id", "security_deposit","monthly_rent" , "address", "area_size", "construct_year", "roooms_number",
                    "parkings_number", "furnished", "period", "start_date", "end_date",
                     "owner_username", "renter_username", "payed_monthes", "status"]
 user = User(0, "0", 0)
@@ -276,11 +277,12 @@ def add_home(n):
                 print("Repeated home!")
                 continue
             price = int(input("Enter price:\n"))
+            area = float(input("Enter the area size:\n"))
             construct_year = int(input("Enter construct year:\n"))
             roooms_number = int(input("Enter roooms number:\n"))
             parkings_number = int(input("Enter parkings number:\n"))
             furnished = input("Is it furnished?(yes/no)\n")
-            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r)" %(price, address, construct_year, roooms_number, parkings_number, furnished, user.username, "unknown", "active"))
+            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(price, address, area, construct_year, roooms_number, parkings_number, furnished, user.username, "unknown", "active"))
             db.commit()
         else:
             address = input("Enter the address:\n")
@@ -293,12 +295,13 @@ def add_home(n):
                 continue
             security_deposit = int(input("Enter the security deposit:\n"))
             monthly_rent = int(input("Enter the monthly rent:\n"))
+            area = float(input("Enter the area size:\n"))
             construct_year = int(input("Enter construct year:\n"))
             roooms_number = int(input("Enter roooms number:\n"))
             parkings_number = int(input("Enter parkings number:\n"))
             furnished = input("Is it furnished?(yes/no)\n")
             period = int(input("Enter the period months:\n"))
-            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(security_deposit, monthly_rent, address, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, "active"))
+            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(security_deposit, monthly_rent, address, area, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, "active"))
             db.commit()
             
 def unique_home(n):
@@ -315,7 +318,7 @@ def choose_home(n):
 def show_home(n):
     while True:
         if n == "buying_homes":
-            order = input("Enter sort mudel:id/price/address/construct_year/roooms_number/parkings_number/furnished\n")
+            order = input("Enter sort mudel:id/price/address/area_size/construct_year/roooms_number/parkings_number/furnished\n")
             if order == "exit":
                 break
             elif order == "exitexit":
@@ -332,7 +335,7 @@ def show_home(n):
                 df.set_index('id', inplace = True)
                 print(df)
         if n == "renting_homes":
-            order = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/construct_year/roooms_number/parkings_number/furnished\n")
+            order = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/area_size/construct_year/roooms_number/parkings_number/furnished\n")
             if order == "exit":
                 break
             elif order == "exitexit":
