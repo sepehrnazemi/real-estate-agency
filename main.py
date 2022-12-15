@@ -267,7 +267,7 @@ def add_home(n):
             parkings_number = int(input("Enter parkings number:\n"))
             furnished = input("Is it furnished?(yes/no)\n")
             period = int(input("Enter the period months:\n"))
-            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(security_deposit, monthly_rent, address, area, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, str(datetime.today()).replace(second=0, microsecond=0), "active"))
+            cursor.execute(" INSERT INTO renting_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(security_deposit, monthly_rent, address, area, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, str(datetime.today()).replace(second=0, microsecond=0), "active"))
             db.commit()
             
 def unique_home(n):
@@ -306,13 +306,12 @@ def choose_home(n):
             cursor.execute("SELECT * FROM %r WHERE username = %r" %(utype, home[9]))
             seller = cursor.fetchall()[0]
             seller_credit = seller[3]
-            price_program = int(price * 0.01)
+            price_program = int(price * 0.01) #TODO
             seller_credit += (price - price_program)
             cursor.execute("UPDATE %r SET credit = %r WHERE username = %r" %(utype, seller_credit, home[9]))
             cursor.execute("UPDATE buying_homes SET status = 'Inactive' WHERE id = %r" %(order))
             cursor.execute("UPDATE buying_homes SET buyer_username = %r WHERE id = %r" %(user.username, order))
             cursor.execute("UPDATE buying_homes SET date_sold = %r WHERE id = %r" %(str(date.today()), order))
-            cursor.execute("UPDATE buying_homes SET date_sold = %r WHERE id = %r" %(str(datetime.today()).replace(second=0, microsecond=0), order))
             cursor.execute(" INSERT INTO transactions VALUES (null ,%r, %r, 'buying home', %r)" %(str(datetime.today()).replace(second=0, microsecond=0), price_program, seller[1]))
             db.commit()
         elif n == "renting_homes":
