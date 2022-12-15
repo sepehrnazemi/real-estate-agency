@@ -2,7 +2,6 @@ import sqlite3
 import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-#import decimal
 
 class User:
     def __init__(self, name, username, password):
@@ -55,39 +54,6 @@ class User:
             db.commit()
             break
 
-class Home:
-    def __init__(self, area, address, const_year, rooms, parking, furnished, status):
-        self.address = address
-        self.area = area
-        self.const_year = const_year
-        self.rooms = rooms
-        self.parking = parking
-        self.status = status
-        self.furnished = furnished
-
-class BuyingHome(Home):
-    def __init__(self, price, address, area, const_year, rooms, parking, furnished, seller, buyer, status):
-        super().__init__(address, const_year, area, rooms, parking, furnished, status)
-        self.price = price
-        self.seller = seller
-        self.buyer = buyer
-
-class RentingHome(Home):
-    def __init__(self, security_deposit, mo_rent, address, area, const_year, rooms, parking, furnished, period, start_date, owner, renter, status):
-        super().__init__(address, const_year, area, rooms, parking, furnished, status)
-        self.security_deposit = security_deposit
-        self.mo_rent = mo_rent
-        self.period = period
-        if start_date != "unknown":
-            start_date = start_date.split(" ")
-            self.start_date = datetime(start_date[0], start_date[1], start_date[2])
-            self.end_date = self.start_date + relativedelta(months=+int(self.period))
-        else:
-            self.start_date = "unknown"
-            self.end_date = "unknown"
-        self.owner = owner
-        self.renter = renter
-
 db = sqlite3.connect('sql.db')
 cursor = db.cursor()
 cursor.execute('''
@@ -136,7 +102,7 @@ else:
     important_password = movaghat[0][1]
     
 b_homes_columns = ["id", "price" , "address", "area_size", "construct_year", "roooms_number",
-                   "parkings_number", "furnished", "seler_username", "buyer_username", "status"]
+                   "parkings_number", "furnished", "seler_username", "buyer_username", "date_added", "date_" "status"]
 r_homes_columns = ["id", "security_deposit","monthly_rent" , "address", "area_size", "construct_year", "roooms_number",
                    "parkings_number", "furnished", "period", "start_date", "end_date",
                     "owner_username", "renter_username", "payed_monthes", "status"]
@@ -284,7 +250,7 @@ def add_home(n):
             furnished = input("Is it furnished?(yes/no)\n")
             cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(price, address, area, construct_year, roooms_number, parkings_number, furnished, user.username, "unknown", "active"))
             db.commit()
-        else:
+        elif n == "renting_homes":
             address = input("Enter the address:\n")
             if address == "exit":
                 break
@@ -313,7 +279,46 @@ def unique_home(n):
     else: return True 
 
 def choose_home(n):
-    pass
+    while True:
+        order = input("Enter the id:\n")
+        if order == "exit":
+            break
+        elif order == "exitexit":
+            exit()
+        elif n == "buying_homes":
+            cursor.execute("SELECT * FROM buying_homes WHERE id = %r AND status = 'Active'" %(order))
+            home = cursor.fetchall()
+            if home == []:
+                print("No active home with this id!")
+                continue
+            home = home[0]
+            price = home[1]
+            if user.credit < price:
+                print("Your credit isn't enough!")
+                continue
+            utype = check_user(user.username)
+            user.credit -= price
+            cursor.execute("UPDATE %r SET credit = %r WHERE username = %r" %(utype, user.credit, user.username))
+            utype = check_user(home[9])
+            cursor.execute("SELECT * FROM %r WHERE username = %r" %(utype, home[9]))
+            seller = cursor.fetchall()[0]
+            seller_credit = seller[3]
+            seller_credit += price
+            cursor.execute("UPDATE %r SET credit = %r WHERE username = %r" %(utype, seller_credit, home[9]))
+            cursor.execute("UPDATE buying_homes SET status = 'Inactive' WHERE id = %r" %(order))
+            cursor.execute("UPDATE buying_homes SET buyer_username = %r WHERE id = %r" %(user.username, order))
+            #dddddddddddddaaaaaaaaaaaaaaaaaatttttttttttttttttteeeeeeeeeeeeeee!!!!!!!!!!!!!!!
+
+
+        elif n == "renting_homes":
+            pass
+
+def check_user(n):
+    cursor.execute("SELECT * FROM users WHERE username = %r" %(n))
+    if cursor.fetchall == []:
+        return 'admins'
+    else:
+        return 'users'
 
 def show_home(n):
     while True:
@@ -334,7 +339,7 @@ def show_home(n):
                 df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
                 df.set_index('id', inplace = True)
                 print(df)
-        if n == "renting_homes":
+        elif n == "renting_homes":
             order = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/area_size/construct_year/roooms_number/parkings_number/furnished\n")
             if order == "exit":
                 break
