@@ -50,7 +50,7 @@ class User:
                 print("You didn't enter the number!")
                 continue
             self.credit += int(order)
-            cursor.execute("UPDATE %r SET cedit = %r WHERE username = %r" %(type, self.credit, self.username))
+            cursor.execute("UPDATE %r SET cedit = %d WHERE username = %r" %(type, self.credit, self.username))
             db.commit()
             break
 
@@ -193,7 +193,7 @@ def singup(n):
             del movaghat
             continue
         password = input("Enter your password:\n")
-        cursor.execute(" INSERT INTO %r VALUES (%r, %r, %r, 0)" %(n, name, username, password))
+        cursor.execute("INSERT INTO %r VALUES (%r, %r, %r, 0)" %(n, name, username, password))
         db.commit()
         global user
         user = User(name, username, password)
@@ -215,7 +215,7 @@ def user_menu():
             home_menu("buying_homes")
 
 def admin_menu():
-    pass#todo
+    pass#TODO
 
 def home_menu(n):
     while True:
@@ -233,12 +233,12 @@ def home_menu(n):
             
 def add_home(n):
     while True:
-        if n == "buying_homes":
-            address = input("Enter the address:\n")
-            if address == "exit":
-                break
-            elif address == "exitexit":
-                exit()
+        address = input("Enter the address:\n")
+        if address == "exit":
+            break
+        elif address == "exitexit":
+            exit()
+        elif n == "buying_homes":
             if unique_home(address) == False:
                 print("Repeated home!")
                 continue
@@ -248,26 +248,24 @@ def add_home(n):
             roooms_number = int(input("Enter roooms number:\n"))
             parkings_number = int(input("Enter parkings number:\n"))
             furnished = input("Is it furnished?(yes/no)\n")
-            cursor.execute(" INSERT INTO buying_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(price, address, area, construct_year, roooms_number, parkings_number, furnished, user.username, "unknown", str(datetime.today()).replace(second=0, microsecond=0), "unknown", "active"))
+            cursor.execute(" INSERT INTO buying_homes VALUES (null, %d, %r, %f, %r, %d, %d, %r, %r, %r, %r, %r, %r)" %(price, address, area, construct_year, roooms_number, parkings_number, furnished, user.username, "unknown", str(datetime.today()).replace(second=0, microsecond=0), "unknown", "active"))
             db.commit()
         elif n == "renting_homes":
-            address = input("Enter the address:\n")
-            if address == "exit":
-                break
-            elif address == "exitexit":
-                exit()
             if unique_home(address) == False:
                 print("Repeated home!")
                 continue
-            security_deposit = int(input("Enter the security deposit:\n"))
             monthly_rent = int(input("Enter the monthly rent:\n"))
+            period = int(input("Enter the period months:\n"))
+            security_deposit = int(input("Enter the security deposit:\n"))
+            if security_deposit < monthly_rent * period:
+                print("Security deposit can't be less than: monthly rent * period.")
+                continue
             area = float(input("Enter the area size:\n"))
             construct_year = int(input("Enter construct year:\n"))
             roooms_number = int(input("Enter roooms number:\n"))
             parkings_number = int(input("Enter parkings number:\n"))
             furnished = input("Is it furnished?(yes/no)\n")
-            period = int(input("Enter the period months:\n"))
-            cursor.execute(" INSERT INTO renting_homes VALUES (null, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r, %r)" %(security_deposit, monthly_rent, address, area, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, str(datetime.today()).replace(second=0, microsecond=0), "active"))
+            cursor.execute(" INSERT INTO renting_homes VALUES (null, %d, %d, %r, %f, %r, %d, %d, %r, %d, %r, %r, %r, %r, %d, %r, %r)" %(security_deposit, monthly_rent, address, area, construct_year, roooms_number, parkings_number, furnished, period, "unknown", "unknown", user.username, "unknown", 0, str(datetime.today()).replace(second=0, microsecond=0), "active"))
             db.commit()
             
 def unique_home(n):
@@ -288,8 +286,8 @@ def choose_home(n):
         elif order.isdecimal() == False:
             print("You didn't enter the number!")
         elif n == "buying_homes":
-            order = int(order)
-            cursor.execute("SELECT * FROM buying_homes WHERE id = %r AND status = 'Active'" %(order))
+            id = int(order)
+            cursor.execute("SELECT * FROM buying_homes WHERE id = %d AND status = 'Active'" %(id))
             home = cursor.fetchall()
             if home == []:
                 print("No active home with this id!")
@@ -300,23 +298,28 @@ def choose_home(n):
                 print("Your credit isn't enough!")
                 continue
             utype = check_user(user.username)
+            global user
             user.credit -= price
-            cursor.execute("UPDATE %r SET credit = %r WHERE username = %r" %(utype, user.credit, user.username))
+            cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(utype, user.credit, user.username))
             utype = check_user(home[9])
             cursor.execute("SELECT * FROM %r WHERE username = %r" %(utype, home[9]))
             seller = cursor.fetchall()[0]
             seller_credit = seller[3]
-            price_program = int(price * 0.01) #TODO
-            seller_credit += (price - price_program)
-            cursor.execute("UPDATE %r SET credit = %r WHERE username = %r" %(utype, seller_credit, home[9]))
-            cursor.execute("UPDATE buying_homes SET status = 'Inactive' WHERE id = %r" %(order))
-            cursor.execute("UPDATE buying_homes SET buyer_username = %r WHERE id = %r" %(user.username, order))
-            cursor.execute("UPDATE buying_homes SET date_sold = %r WHERE id = %r" %(str(date.today()), order))
-            cursor.execute(" INSERT INTO transactions VALUES (null ,%r, %r, 'buying home', %r)" %(str(datetime.today()).replace(second=0, microsecond=0), price_program, seller[1]))
+            cursor.execute("SELECT * FROM real_estate WHERE id = 1")
+            price_program = cursor.fetchall()[0][2]
+            movaghat = int(price * 0.01)
+            price_program += movaghat
+            seller_credit += (price - movaghat)
+            cursor.execute("UPDATE real_estate SET credit = %d WHERE id = 1" %(price_program))
+            cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(utype, seller_credit, home[9]))
+            cursor.execute("UPDATE buying_homes SET status = 'Inactive' WHERE id = %d" %(id))
+            cursor.execute("UPDATE buying_homes SET buyer_username = %r WHERE id = %d" %(user.username, id))
+            cursor.execute("UPDATE buying_homes SET date_sold = %r WHERE id = %d" %(str(date.today()), id))
+            cursor.execute(" INSERT INTO transactions VALUES (null ,%r, %d, 'buying home', %r)" %(str(datetime.today()).replace(second=0, microsecond=0), price_program, seller[1]))
             db.commit()
         elif n == "renting_homes":
-            order = int(order)
-            cursor.execute("SELECT * FROM renting_homes WHERE id = %r AND status = 'Active'" %(order))
+            id = int(order)
+            cursor.execute("SELECT * FROM renting_homes WHERE id = %d AND status = 'Active'" %(id))
             home = cursor.fetchall()
             if home == []:
                 print("No active home with this id!")
@@ -326,7 +329,29 @@ def choose_home(n):
             if user.credit < security_deposit:
                 print("Your credit isn't enough!")
                 continue
-
+            owner_username = home[12]
+            owner_type = check_user(owner_username)
+            cursor.execute("SELECT * FROM %r WHERE username = %r" %(owner_type, owner_username))
+            owner = cursor.fetchall()[0]
+            owner_credit = owner[3]
+            user_type = check_user(user.username)
+            global user
+            user.credit -= security_deposit
+            price_program = int(security_deposit * 0.01)
+            owner_credit += (security_deposit - price_program)
+            cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(user_type , user.credit, user.username))
+            cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(owner_type , owner_credit, owner[1]))
+            cursor.execute("UPDATE renting_homes SET status = 'Inactive' WHERE id = %d" %(id))
+            cursor.execute("UPDATE renting_homes SET start_date = %r WHERE id = %d" %(str(date.today()), id))
+            period = home[9]
+            cursor.execute("UPDATE renting_homes SET end_date = %r WHERE id = %d" %(str(date.today() + relativedelta(months=period)), id))
+            cursor.execute("UPDATE renting_homes SET renter_username = %r WHERE id = %d" %(user.username, id))
+            cursor.execute("SELECT * FROM real_estate WHERE id = 1")
+            movaghat = cursor.fetchall()[0]
+            price += movaghat[2]
+            cursor.execute("UPDATE real_estate SET credit = %d WHERE id = 1" %(price))
+            cursor.execute("INSERT INTO transactions VALUES (null, %r, %d, 'renting home', %r)" %(n, str(datetime.today()).replace(second=0, microsecond=0), price_program, owner_username))
+            db.commit()
 
 def check_rent() -> None:
     while True:
@@ -338,23 +363,53 @@ def check_rent() -> None:
         elif id.isdecimal() == False:
             print("You didn't enter the number!")
             continue
-        cursor.execute("SELECT * FROM renting_homes WHERE id = %r AND status = 'Inactive'" %(id))
+        cursor.execute("SELECT * FROM renting_homes WHERE id = %d AND status = 'Inactive'" %(id))
         home = cursor.fetchall()
         if home == []:
             print("No rented home with this id!")
+            continue
+        home = home[0]
+        period = home[9]
+        payed_monthes = home[14]
+        if payed_monthes == period:
+            print("The home paying is finished!")
             continue
         started = home[10]
         started = started.split()
         started = [int(i) for i in started]
         started = date(started[0], started[1], started[2])
-        period = home[9]
-        ended = home[11]
-
         li = []
-        time = 0 #home[12]owner, home[13]renter
-
-
-    
+        security_deposit = home[1]
+        monthly_rent = home[2]
+        owner_type = check_user(home[12])
+        cursor.execute("SELECT * FROM %r WHERE username = %r" %(owner_type, home[12]))
+        owner = cursor.fetchall()[0]
+        renter_type = check_user(home[13])
+        cursor.execute("SELECT * FROM %r WHERE username = %r" %(renter_type, home[13]))
+        renter = cursor.fetchall()[0]
+        time = 0
+        owner_credit = owner[3]
+        renter_credit = renter[3]
+        for i in range(1, period+1):
+            h = started + relativedelta(months=+i)
+            li.append(h)
+        for i in li:
+            if i <= date.today():
+                time += 1
+            else:
+                break
+        monthes = time - payed_monthes
+        payed_monthes = time
+        cursor.execute("UPDATE renting_homes SET payed_monthes = %d WHERE id = %d" %(payed_monthes, id))
+        paying = monthes * monthly_rent
+        renter_credit -= paying
+        owner_credit += paying
+        if payed_monthes == period:
+            renter_credit += security_deposit
+            owner_credit -= security_deposit
+        cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(renter_type , renter_credit, renter[1]))
+        cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(owner_type , owner_credit, owner[1]))
+        db.commit()    
 
 def check_user(n):
     cursor.execute("SELECT * FROM users WHERE username = %r" %(n))
