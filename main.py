@@ -205,14 +205,62 @@ def singup(n):
 def user_menu():
     while end != True:
         order = input('''Choose operation:\n1- Buying home\n2- Renting home
-3- Check credit\n4- Update credit\n5- My homes\n6- Rename\n7- Change password
-8- Find user\n3- Delete account\n''')
+3- Check credit\n4- Update credit\n5- My homes\n6- Rename\n7- Change password\n8- Sing out\n9- Delete account''')
         if order == "exit":
             break
         elif order == "exitexit":
             exit()
         elif order == "1":
             home_menu("buying_homes")
+        elif order == "2":
+            home_menu("renting_homes")
+        elif order == "3":
+            check_credit()
+        elif order == "4":
+            user.update_credit(check_user(user.username))
+        elif order == "5":
+            user_homes()
+        elif order == "6":
+            user.rename(check_user(user.username))
+        elif order == "7":
+            user.newpassword(check_user(user.username))
+        elif order == "8":
+            singout()
+        elif order == "9":
+            deleteac()
+
+def check_credit():
+    cursor.execute("SELECT * FROM %r WHERE username = %r" %(check_user(user.username), user.username))
+    print(cursor.fetchall()[0][3])
+
+def singout():
+    global user
+    user = User(0, "0", 0)
+    global end
+    end = True
+    print("\U0001F44B")
+
+def deleteac(username):
+    user_type = check_user(username)
+    cursor.execute("SELECT * FROM renting_homes WHERE renter_username = %r OR owner_username = %r AND status = 'Inactive'" %(user.username, user.username))
+    if cursor.fetchall != []:
+        for i in cursor.fetchall:
+            if i[9] != i[14]:
+                print("Having renting!")
+                return None
+    elif user.credit < 0:
+        print("Didn't pay money!")
+        return None
+    cursor.execute("DELETE FROM %r WHERE username = %r" %(user_type, username))
+    cursor.execute("DELETE FROM buying_homes WHERE seler_username = %r AND status = 'Active'" %(username))
+    cursor.execute("DELETE FROM renting_homes WHERE owner_username = %r AND status = 'Active'" %(username))
+    db.commit()
+    print("\U0001F44B")
+    global end
+    end = True
+
+    
+    
 
 def admin_menu():
     pass#TODO
@@ -445,13 +493,34 @@ def show_home(n):
                 exit()
             sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
             if sort_type == "1":
-                cursor = db.execute("SELECT * FROM renting_homes ORDER BY %s DESC" %(order))
+                cursor.execute("SELECT * FROM renting_homes ORDER BY %s DESC" %(order))
                 df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
                 df.set_index('id', inplace = True)
                 print(df)
             else:
-                cursor = db.execute("SELECT * FROM renting_homes ORDER BY %s ASC" %(order))
+                cursor.execute("SELECT * FROM renting_homes ORDER BY %s ASC" %(order))
                 df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
                 df.set_index('id', inplace = True)
+
+def user_homes():
+    while True:
+        order = input("Choose mudel:\n1- Buying homes\n2- Renting homes\n")
+        if order == "exit":
+            break
+        elif order == "exitexit":
+            exit()
+        role = input("Choose type:\n1- Added\n2- Choosed\n3- Both")
+        if order == "1":
+            order = input("Enter sort mudel:id/price/address/area_size/construct_year/roooms_number/parkings_number/furnished\n")
+            sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
+            if sort_type == "1":#NAZEMMMMMMMMMMIIIIIIIII BERES BE DADDESH!!!!!!!!!!
+                cursor = db.execute("SELECT * FROM buying_homes WHERE username = %r ORDER BY %s DESC" %(order))
+            cursor.execute("SELECT * FROM buying_homes WHERE seler_username = %r or buyer_username = %r" %(user.username, user.username))
+    # df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
+    # df.set_index('id', inplace = True)
+    # print("Buyig homes:\n", df)
+    # cursor.execute("SELECT * FROM renting_homes WHERE seler_username = %r or buyer_username = %r" %(user.username, user.username))
+    # df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
+    # df.set_index('id', inplace = True)
 
 first()
