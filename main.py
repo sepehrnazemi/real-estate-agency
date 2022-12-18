@@ -102,7 +102,7 @@ else:
     important_password = movaghat[0][1]
     
 b_homes_columns = ["id", "price" , "address", "area_size", "construct_year", "roooms_number",
-                   "parkings_number", "furnished", "seler_username", "buyer_username", "date_added", "date_sold" "status"]
+                   "parkings_number", "furnished", "seler_username", "buyer_username", "date_added", "date_sold", "status"]
 r_homes_columns = ["id", "security_deposit","monthly_rent" , "address", "area_size", "construct_year", "roooms_number",
                    "parkings_number", "furnished", "period", "start_date", "end_date",
                     "owner_username", "renter_username", "payed_monthes", "date_added", "status"]
@@ -204,8 +204,8 @@ def singup(n):
 
 def user_menu():
     while end != True:
-        order = input('''Choose operation:\n1- Buying home\n2- Renting home
-3- Check credit\n4- Update credit\n5- My homes\n6- Rename\n7- Change password\n8- Sing out\n9- Delete account''')
+        order = input('''Choose operation:\n1- Buying home\n2- Renting home\n3- Check credit
+4- Update credit\n5- My homes\n6- Check rentings\n7- Rename\n8- Change password\n9- Sing out\n10- Delete account''')
         if order == "exit":
             break
         elif order == "exitexit":
@@ -221,12 +221,14 @@ def user_menu():
         elif order == "5":
             user_homes()
         elif order == "6":
-            user.rename(check_user(user.username))
+            renting_menu()
         elif order == "7":
-            user.newpassword(check_user(user.username))
+            user.rename(check_user(user.username))
         elif order == "8":
-            singout()
+            user.newpassword(check_user(user.username))
         elif order == "9":
+            singout()
+        elif order == "10":
             deleteac()
 
 def check_credit():
@@ -258,9 +260,6 @@ def deleteac(username):
     print("\U0001F44B")
     global end
     end = True
-
-    
-    
 
 def admin_menu():
     pass#TODO
@@ -401,6 +400,18 @@ def choose_home(n):
             cursor.execute("INSERT INTO transactions VALUES (null, %r, %d, 'renting home', %r)" %(n, str(datetime.today()).replace(second=0, microsecond=0), price_program, owner_username))
             db.commit()
 
+def  renting_menu():
+    while True:
+        order = input("Choose type:\n1- By home id\n2- My rentings")
+        if order == "exit":
+            break
+        elif order == "exitexit":
+            exit()
+        elif order == "1":
+            check_rent()
+        elif order == "2":
+            pass#TODO
+
 def check_rent() -> None:
     while True:
         id = input("Enter the id:\n")
@@ -468,59 +479,51 @@ def check_user(n):
 
 def show_home(n):
     while True:
+        filter1 = 'status'
+        filter2 = "Active"
+        name = n
+        type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
+        if type == "exit":
+            break
+        elif type == "exitexit":
+            exit()
         if n == "buying_homes":
-            order = input("Enter sort mudel:id/price/address/area_size/construct_year/roooms_number/parkings_number/furnished\n")
-            if order == "exit":
-                break
-            elif order == "exitexit":
-                exit()
-            sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
-            if sort_type == "1":
-                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %s DESC" %(order))
-                df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
-                df.set_index('id', inplace = True)
-                print(df)
-            else:
-                cursor = db.execute("SELECT * FROM buying_homes ORDER BY %s ASC" %(order))
-                df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
-                df.set_index('id', inplace = True)
-                print(df)
+            sort = input("Enter sort mudel:id/price/address/area_size/construct_year/roooms_number/parkings_number/furnished\n")
+            table_d(name, filter1, filter2, sort, type)
         elif n == "renting_homes":
-            order = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/area_size/construct_year/roooms_number/parkings_number/furnished\n")
-            if order == "exit":
-                break
-            elif order == "exitexit":
-                exit()
-            sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
-            if sort_type == "1":
-                cursor.execute("SELECT * FROM renting_homes ORDER BY %s DESC" %(order))
-                df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
-                df.set_index('id', inplace = True)
-                print(df)
-            else:
-                cursor.execute("SELECT * FROM renting_homes ORDER BY %s ASC" %(order))
-                df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
-                df.set_index('id', inplace = True)
+            sort = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/area_size/construct_year/roooms_number/parkings_number/furnished\n")
+            table_d(name, filter1, filter2, sort, type)
 
 def user_homes():
     while True:
-        order = input("Choose mudel:\n1- Buying homes\n2- Renting homes\n")
+        order = input("Enter type:seler/buyer/owner/renter\n")
         if order == "exit":
             break
         elif order == "exitexit":
             exit()
-        role = input("Choose type:\n1- Added\n2- Choosed\n3- Both")
-        if order == "1":
-            order = input("Enter sort mudel:id/price/address/area_size/construct_year/roooms_number/parkings_number/furnished\n")
-            sort_type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
-            if sort_type == "1":#NAZEMMMMMMMMMMIIIIIIIII BERES BE DADDESH!!!!!!!!!!
-                cursor = db.execute("SELECT * FROM buying_homes WHERE username = %r ORDER BY %s DESC" %(order))
-            cursor.execute("SELECT * FROM buying_homes WHERE seler_username = %r or buyer_username = %r" %(user.username, user.username))
-    # df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
-    # df.set_index('id', inplace = True)
-    # print("Buyig homes:\n", df)
-    # cursor.execute("SELECT * FROM renting_homes WHERE seler_username = %r or buyer_username = %r" %(user.username, user.username))
-    # df = pd.DataFrame(cursor.fetchall(), columns=r_homes_columns)
-    # df.set_index('id', inplace = True)
+        filter1 = order + "_username"
+        filter2 = user.username
+        type = input("Choose sort type:\n1- Descending\n2- Ascending\n")
+        if order == "seler" or order == "buyer":
+            name = 'buying_homes'
+            sort = input("Enter sort mudel:id/price/address/area_size/construct_year/roooms_number/parkings_number/furnished\n")
+            table_d(name, filter1, filter2, sort, type)
+        elif order == "owner" or order == "renter":
+            name = 'renting_homes'
+            sort = input("Enter sort mudel:id/security_deposit/monthly_rent/address/period/area_size/construct_year/roooms_number/parkings_number/furnished\n")
+            table_d(name, filter1, filter2, sort, type)
+
+
+def table_d(name, filter: str, filter2, sort, type):
+    if type == 1:
+        cursor.execute("SELECT * FROM %r WHERE %s = %r ORDER BY %s DESC" %(name, filter, filter2, sort))
+    else:
+        cursor.execute("SELECT * FROM %r WHERE %s = %r ORDER BY %s ASC" %(name, filter, filter2, sort))
+    if name == "buying_homes":
+        df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
+    else:
+        df = pd.DataFrame(cursor.fetchall(), columns=b_homes_columns)
+    df.set_index('id', inplace = True)
+    print(df)
 
 first()
