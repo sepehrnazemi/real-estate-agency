@@ -233,7 +233,8 @@ def user_menu():
 
 def check_credit():
     cursor.execute("SELECT * FROM %r WHERE username = %r" %(check_user(user.username), user.username))
-    print(cursor.fetchall()[0][3])
+    user.credit = cursor.fetchall()[0][3]
+    print(user.credit)
 
 def singout():
     global user
@@ -408,67 +409,76 @@ def  renting_menu():
         elif order == "exitexit":
             exit()
         elif order == "1":
-            check_rent()
+            id = input("Enter the id:\n")
+            check_rent(id)
         elif order == "2":
-            pass#TODO
+            check_rents(user.username)
 
-def check_rent() -> None:
-    while True:
-        id = input("Enter the id:\n")
-        if id == "exit":
+def check_rents(username):
+    li = []
+    n = 0
+    cursor.execute("SELECT * FROM renting_homes WHERE owner_username = %r AND status = 'Inactive'" %(username))
+    li.extend(cursor.fetchall)
+    cursor.execute("SELECT * FROM renting_homes WHERE renter_username = %r AND status = 'Inactive'" %(username))
+    li.extend(cursor.fetchall())
+    if li == []:
+        print("You don't have any rentings")
+        return None
+    for i in li:
+        if i[9] != i[14]:
+            check_rent(i[0])
+            n += 1
+    if n == 0:
+        print("Your rentings are finished.")
+
+def check_rent(id) -> None:
+    cursor.execute("SELECT * FROM renting_homes WHERE id = %d AND status = 'Inactive'" %(id))
+    home = cursor.fetchall()
+    if home == []:
+        print("No rented home with this id!")
+        return None
+    home = home[0]
+    period = home[9]
+    payed_monthes = home[14]
+    if payed_monthes == period:
+        print("The home paying is finished!")
+        return None
+    started = home[10]
+    started = started.split()
+    started = [int(i) for i in started]
+    started = date(started[0], started[1], started[2])
+    li = []
+    security_deposit = home[1]
+    monthly_rent = home[2]
+    owner_type = check_user(home[12])
+    cursor.execute("SELECT * FROM %r WHERE username = %r" %(owner_type, home[12]))
+    owner = cursor.fetchall()[0]
+    renter_type = check_user(home[13])
+    cursor.execute("SELECT * FROM %r WHERE username = %r" %(renter_type, home[13]))
+    renter = cursor.fetchall()[0]
+    time = 0
+    owner_credit = owner[3]
+    renter_credit = renter[3]
+    for i in range(1, period+1):
+        h = started + relativedelta(months=+i)
+        li.append(h)
+    for i in li:
+        if i <= date.today():
+            time += 1
+        else:
             break
-        elif id == "exitexit":
-            exit()
-        elif id.isdecimal() == False:
-            print("You didn't enter the number!")
-            continue
-        cursor.execute("SELECT * FROM renting_homes WHERE id = %d AND status = 'Inactive'" %(id))
-        home = cursor.fetchall()
-        if home == []:
-            print("No rented home with this id!")
-            continue
-        home = home[0]
-        period = home[9]
-        payed_monthes = home[14]
-        if payed_monthes == period:
-            print("The home paying is finished!")
-            continue
-        started = home[10]
-        started = started.split()
-        started = [int(i) for i in started]
-        started = date(started[0], started[1], started[2])
-        li = []
-        security_deposit = home[1]
-        monthly_rent = home[2]
-        owner_type = check_user(home[12])
-        cursor.execute("SELECT * FROM %r WHERE username = %r" %(owner_type, home[12]))
-        owner = cursor.fetchall()[0]
-        renter_type = check_user(home[13])
-        cursor.execute("SELECT * FROM %r WHERE username = %r" %(renter_type, home[13]))
-        renter = cursor.fetchall()[0]
-        time = 0
-        owner_credit = owner[3]
-        renter_credit = renter[3]
-        for i in range(1, period+1):
-            h = started + relativedelta(months=+i)
-            li.append(h)
-        for i in li:
-            if i <= date.today():
-                time += 1
-            else:
-                break
-        monthes = time - payed_monthes
-        payed_monthes = time
-        cursor.execute("UPDATE renting_homes SET payed_monthes = %d WHERE id = %d" %(payed_monthes, id))
-        paying = monthes * monthly_rent
-        renter_credit -= paying
-        owner_credit += paying
-        if payed_monthes == period:
-            renter_credit += security_deposit
-            owner_credit -= security_deposit
-        cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(renter_type , renter_credit, renter[1]))
-        cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(owner_type , owner_credit, owner[1]))
-        db.commit()    
+    monthes = time - payed_monthes
+    payed_monthes = time
+    cursor.execute("UPDATE renting_homes SET payed_monthes = %d WHERE id = %d" %(payed_monthes, id))
+    paying = monthes * monthly_rent
+    renter_credit -= paying
+    owner_credit += paying
+    if payed_monthes == period:
+        renter_credit += security_deposit
+        owner_credit -= security_deposit
+    cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(renter_type , renter_credit, renter[1]))
+    cursor.execute("UPDATE %r SET credit = %d WHERE username = %r" %(owner_type , owner_credit, owner[1]))
+    db.commit()    
 
 def check_user(n):
     cursor.execute("SELECT * FROM users WHERE username = %r" %(n))
